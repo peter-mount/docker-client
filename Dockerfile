@@ -1,11 +1,20 @@
+FROM alpine as fetch
+
+RUN apk add --no-cache \
+      ca-certificates \
+      curl &&\
+    cd /tmp &&\
+    curl -sSL -O https://master.dockerproject.org/linux/x86_64/docker.tgz &&\
+    tar xzf docker.tgz
+
 FROM area51/java:serverjre-8
 MAINTAINER Peter Mount <peter@retep.org>
 
 ENV DOCKER_VERSION 1.11.0
 
-RUN apk add --update ca-certificates openssh &&\
-    curl -sSL -O https://get.docker.com/builds/Linux/x86_64/docker-${DOCKER_VERSION}.tgz &&\
-    tar zxf docker-${DOCKER_VERSION}.tgz -C / &&\
-    ln -s /docker/docker /usr/bin/docker &&\
-    rm -rf docker-${DOCKER_VERSION}.tgz /var/cache/apk/*
+COPY --from=fetch /tmp/docker /docker
 
+RUN apk add --no-cache \
+      ca-certificates \
+      openssh &&\
+    ln -s /docker/docker /usr/bin/docker
